@@ -1,79 +1,61 @@
-import { GoogleGenAI } from "@google/genai";
 import { DivinationResult, AIAnalysisResult } from "../types";
-import { getTrigramName } from "../constants";
+import { getTrigramName, TRIGRAMS } from "../constants";
 
 export const interpretDivination = async (result: DivinationResult): Promise<AIAnalysisResult> => {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) {
-    throw new Error("API Key not found");
-  }
-
-  const ai = new GoogleGenAI({ apiKey });
-
-  const upperOrig = getTrigramName(result.original.upperId);
-  const lowerOrig = getTrigramName(result.original.lowerId);
-  const upperNuc = getTrigramName(result.nuclear.upperId);
-  const lowerNuc = getTrigramName(result.nuclear.lowerId);
-  const upperChg = getTrigramName(result.changed.upperId);
-  const lowerChg = getTrigramName(result.changed.lowerId);
-
-  const prompt = `
-    Role: You are a master of "Meihua Yishu" (Plum Blossom Divination) and a financial stock market expert.
-    
-    Task: Interpret the following divination result for a user asking if they will make money buying a specific stock.
-    
-    Context:
-    - Stock Code: ${result.stockCode}
-    - User Number: ${result.userNumber}
-    - Divination Time: ${result.timestamp.toLocaleString()}
-    
-    Hexagrams:
-    1. Original Hexagram (本卦): Upper ${upperOrig}, Lower ${lowerOrig}.
-    2. Nuclear Hexagram (互卦): Upper ${upperNuc}, Lower ${lowerNuc}.
-    3. Changed Hexagram (變卦): Upper ${upperChg}, Lower ${lowerChg}.
-    4. Moving Line (動爻): Line ${result.movingLine}.
-
-    Requirements:
-    Please provide the response in a valid JSON format WITHOUT markdown code blocks. 
-    The primary language MUST be Traditional Chinese (Taiwan usage).
-    
-    The JSON structure must be:
-    {
-      "originalText": "本卦的卦辭與解釋 (Chinese).",
-      "movingLineText": "動爻的爻辭與解釋 (Chinese).",
-      "nuclearText": "互卦的含義簡述 (Chinese).",
-      "changedText": "變卦的含義簡述 (Chinese).",
-      "prediction": "綜合財務分析與預測。使用者會獲利嗎？趨勢如何？請結合五行生剋（體用關係）進行詳細分析 (Chinese).",
-      "predictionEnglish": "A full translation of the prediction field into English."
+  // Prepare data to send to the backend
+  // We send the Names/Natures to avoid the backend needing to import 'constants.ts' and handle path aliasing issues.
+  const payload = {
+    stockCode: result.stockCode,
+    userNumber: result.userNumber,
+    timestamp: result.timestamp.toLocaleString(),
+    movingLine: result.movingLine,
+    original: {
+      upper: getTrigramName(result.original.upperId),
+      upperNature: TRIGRAMS[result.original.upperId].nature,
+      lower: getTrigramName(result.original.lowerId),
+      lowerNature: TRIGRAMS[result.original.lowerId].nature,
+    },
+    nuclear: {
+      upper: getTrigramName(result.nuclear.upperId),
+      upperNature: TRIGRAMS[result.nuclear.upperId].nature,
+      lower: getTrigramName(result.nuclear.lowerId),
+      lowerNature: TRIGRAMS[result.nuclear.lowerId].nature,
+    },
+    changed: {
+      upper: getTrigramName(result.changed.upperId),
+      upperNature: TRIGRAMS[result.changed.upperId].nature,
+      lower: getTrigramName(result.changed.lowerId),
+      lowerNature: TRIGRAMS[result.changed.lowerId].nature,
     }
-    
-    Note: 
-    1. Use Traditional Chinese for all fields except 'predictionEnglish'.
-    2. Ensure the 'prediction' uses the relationships between the Element (Wu Xing) of the Trigrams (Self/Ti vs Object/Yong) to determine the outcome.
-  `;
+  };
 
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json"
-      }
+    // Call our own backend API
+    const response = await fetch('/api/predict', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
     });
 
-    const text = response.text;
-    if (!text) throw new Error("No response from AI");
-    
-    return JSON.parse(text) as AIAnalysisResult;
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Server error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data as AIAnalysisResult;
+
   } catch (error) {
-    console.error("Gemini Error:", error);
+    console.error("API Request Error:", error);
     return {
       originalText: "無法讀取資料。",
       movingLineText: "無法讀取資料。",
       nuclearText: "無法讀取資料。",
       changedText: "無法讀取資料。",
-      prediction: "無法產生預測，請檢查您的網路連線或 API 金鑰。",
-      predictionEnglish: "Failed to generate prediction. Please check your network connection or API Key."
+      prediction: "無法連線至伺服器。請確認網路狀態。",
+      predictionEnglish: "Failed to connect to server. Please check your network."
     };
   }
 };
