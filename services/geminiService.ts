@@ -3,7 +3,7 @@ import { getTrigramName } from "../constants";
 
 export const interpretDivination = async (result: DivinationResult): Promise<AIAnalysisResult> => {
   
-  // Prepare data to send to the backend
+  // Prepare data to send to the backend Vercel function
   const payload = {
     stockCode: result.stockCode,
     userNumber: result.userNumber,
@@ -18,7 +18,7 @@ export const interpretDivination = async (result: DivinationResult): Promise<AIA
   };
 
   try {
-    // Call the Vercel Serverless Function
+    // Call the Vercel Serverless Function (/api/predict)
     const response = await fetch('/api/predict', {
       method: 'POST',
       headers: {

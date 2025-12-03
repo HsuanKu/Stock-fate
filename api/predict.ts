@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 
-export default async function handler(req, res) {
+export default async function handler(req: any, res: any) {
   // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
@@ -59,8 +59,11 @@ export default async function handler(req, res) {
       }
     });
 
-    const text = response.text;
+    let text = response.text;
     if (!text) throw new Error("No response from AI");
+    
+    // Clean up potential Markdown formatting (```json ... ```)
+    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
     
     // Parse JSON to ensure validity before sending back
     const jsonResponse = JSON.parse(text);
