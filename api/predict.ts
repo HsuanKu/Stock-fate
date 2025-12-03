@@ -2,7 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 
 export default async function handler(req: any, res: any) {
   // Log version for debugging
-  console.log("Vercel Function v1.0.5 executing...");
+  console.log("Vercel Function v2.0.0 executing...");
 
   // Only allow POST requests
   if (req.method !== 'POST') {

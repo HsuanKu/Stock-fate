@@ -5,7 +5,7 @@ import { DivinationResult, AIAnalysisResult } from './types';
 import HexagramDisplay from './components/HexagramDisplay';
 import AnalysisResult from './components/AnalysisResult';
 
-// App Version 1.0.5 - Vercel Deployment
+// App Version 2.0.0 - Major Update
 
 const App: React.FC = () => {
   const [stockCode, setStockCode] = useState('');
@@ -65,7 +65,7 @@ const App: React.FC = () => {
               <span className="text-2xl">🌸</span>
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-white font-serif-tc">梅花易數股市預測</h1>
+              <h1 className="text-xl font-bold tracking-tight text-white font-serif-tc">梅花易數股市預測 v2.0</h1>
               <p className="text-xs text-cyan-400 font-medium">Plum Blossom Stock Divination</p>
             </div>
           </div>
