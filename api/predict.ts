@@ -1,6 +1,9 @@
 import { GoogleGenAI } from "@google/genai";
 
 export default async function handler(req: any, res: any) {
+  // Log version for debugging
+  console.log("Vercel Function v1.0.5 executing...");
+
   // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
@@ -10,6 +13,7 @@ export default async function handler(req: any, res: any) {
 
   const apiKey = process.env.API_KEY;
   if (!apiKey) {
+    console.error("API_KEY is missing in environment variables.");
     return res.status(500).json({ error: "Server Error: API Key not configured" });
   }
 

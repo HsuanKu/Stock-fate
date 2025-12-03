@@ -5,6 +5,8 @@ import { DivinationResult, AIAnalysisResult } from './types';
 import HexagramDisplay from './components/HexagramDisplay';
 import AnalysisResult from './components/AnalysisResult';
 
+// App Version 1.0.5 - Vercel Deployment
+
 const App: React.FC = () => {
   const [stockCode, setStockCode] = useState('');
   const [userNumber, setUserNumber] = useState('');
